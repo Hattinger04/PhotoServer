@@ -5,3 +5,4 @@ __pycache__
 .idea
 venv
 JavaService/src/main/resources/keys.txt
+JavaService/target/classes/keys.txt

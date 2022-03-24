@@ -5,7 +5,9 @@ from io import BytesIO
 from time import sleep
 import datetime
 
-import paho.mqtt.client as mqtt
+import paho.mqtt.client as paho
+from paho import mqtt
+
 from picamera import PiCamera
 
 import keysRaspberry
@@ -16,13 +18,15 @@ mqtt_port = keysRaspberry.mqtt_port
 username = keysRaspberry.admin_username
 password = keysRaspberry.admin_password
 
-client = mqtt.Client('raspberryPi')
+
+client = paho.Client(client_id='raspberryPi', userdata=None, protocol=paho.MQTTv5)
 channelSend = "foto/get/dev0"
 channelPost = "foto/taken/dev0"
 
 
 def on_message(client, userdata, message):
     data = str(message.payload.decode("utf-8"))
+    print("Got message: %s" % data)
     if data == "photo":
         enc = encode_base64(take_photo(channelPost))
         req_put(enc)
@@ -32,10 +36,15 @@ def on_message(client, userdata, message):
 
 
 def on_connect(client, userdata, flags, rc, properties=None):
+    print("Connecting...")
     if rc == 0:
         print("Connection established")
         return
     print("Error while connecting")
+
+
+def on_connect_fail(client, userdata, flags, rc, properties=None):
+    print("Connection failed!")
 
 
 def publish_mqtt(channel, message):
@@ -97,12 +106,13 @@ def req_get(id):
 
 
 if __name__ == '__main__':
-    client.username_pw_set(username, password)
     client.on_connect = on_connect
-    print("Connecting...")
+    client.on_connect_fail = on_connect_fail
+    client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
+    client.username_pw_set(username, password)
     client.connect(mqtt_ip, port=mqtt_port)
     print("Subscribing...")
-    client.subscribe(channelSend)
+    client.subscribe(channelSend, qos=1)
     client.on_message = on_message
-    client.loop_start()
+    client.loop_forever()
     print("Finished!")

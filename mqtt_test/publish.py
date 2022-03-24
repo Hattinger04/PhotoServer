@@ -17,4 +17,4 @@ client = mqtt.Client('X12')  # Der Parameter ist die client-ID, diese sollte mö
 client.username_pw_set(admin_username, password)
 client.connect(ip, port=port)  # Im Moment verwenden wir die lokale mosquitto Installation, spaeter durch die IP zu ersetzen
 
-client.publish("house/light", "ON")
+client.publish("foto/get/dev0", "ON")

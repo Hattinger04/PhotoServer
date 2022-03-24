@@ -4,4 +4,4 @@ raspberry_service/keysRaspberry.py
 __pycache__
 .idea
 venv
-JavaService
+JavaService/src/main/resources/keys.txt

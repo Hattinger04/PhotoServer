@@ -1,0 +1,7 @@
+photos.sqlite3
+keysServer.py
+raspberry_service/keysRaspberry.py
+__pycache__
+.idea
+venv
+JavaService

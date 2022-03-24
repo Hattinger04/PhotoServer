@@ -1,8 +1,0 @@
-#Properties
-#Thu Mar 24 20:50:35 CET 2022
-port=2222
-password=Winter21\!
-channelPublish=foto/get/dev0
-channelSubscribe=foto/taken/dev0
-host=192.168.0.42
-username=admin

@@ -5,8 +5,7 @@ from io import BytesIO
 from time import sleep
 import datetime
 
-import paho.mqtt.client as paho
-from paho import mqtt
+import paho.mqtt.client as mqtt
 
 from picamera import PiCamera
 
@@ -19,9 +18,12 @@ username = keysRaspberry.admin_username
 password = keysRaspberry.admin_password
 
 
-client = paho.Client(client_id='raspberryPi', userdata=None, protocol=paho.MQTTv5)
+client = mqtt.Client('raspberryPi')
 channelSend = "foto/get/dev0"
 channelPost = "foto/taken/dev0"
+
+my_stream = BytesIO()
+camera = PiCamera()
 
 
 def on_message(client, userdata, message):
@@ -36,7 +38,6 @@ def on_message(client, userdata, message):
 
 
 def on_connect(client, userdata, flags, rc, properties=None):
-    print("Connecting...")
     if rc == 0:
         print("Connection established")
         return
@@ -68,12 +69,8 @@ def decode_Base64(fName, data):
 
 
 def take_photo(channel):
-    my_stream = BytesIO()
-    camera = PiCamera()
-    camera.start_preview()
-    sleep(2)
     camera.capture(my_stream, "jpeg")
-    publish_mqtt(username, password, channel, "foto taken")
+    publish_mqtt(channel, "foto_taken")
     return my_stream.getvalue()
 
 
@@ -106,13 +103,13 @@ def req_get(id):
 
 
 if __name__ == '__main__':
+    print("Connecting...")
     client.on_connect = on_connect
     client.on_connect_fail = on_connect_fail
-    client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
     client.username_pw_set(username, password)
     client.connect(mqtt_ip, port=mqtt_port)
     print("Subscribing...")
-    client.subscribe(channelSend, qos=1)
+    client.subscribe(channelSend)
     client.on_message = on_message
     client.loop_forever()
     print("Finished!")

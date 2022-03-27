@@ -1,3 +1,4 @@
+package io.github.hattinger04.subscribe;
 /**
  * 
  * @author Hattinger04
@@ -13,27 +14,33 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
-public class SubscribeTest {
+import io.github.hattinger04.PropertiesConfig;
+
+
+
+public class SubscribeCountPhoto {
 
 	private static String username;
 	private static String password;
 	private static String broker;
 	private static String channel;
-	private final static String clientId = "JavaServiceSubscribe";
-
-	private static PropertiesConfig propertiesConfig = new PropertiesConfig(); 
+	private final static String clientId = "JavaServiceSubscribeCountPhoto";
+	private static Integer countPictures; 
+	
+	private static PropertiesConfig propertiesConfig; 
 	
 	
 	
 	public static void main(String[] args) throws IOException {
-		
+		propertiesConfig = new PropertiesConfig(); 
 		propertiesConfig.loadProperties();
 		MemoryPersistence persistence = new MemoryPersistence();
 
 		username = propertiesConfig.getProperty("username"); 
 		password = propertiesConfig.getProperty("password"); 
 		broker = String.format("tcp://%s:%s", propertiesConfig.getProperty("host"), propertiesConfig.getProperty("port"));
-		channel = propertiesConfig.getProperty("channelPublish"); 
+		channel = propertiesConfig.getProperty("channelSubscribe"); 
+		countPictures = Integer.valueOf(propertiesConfig.getProperty("countPictures")); 
 		
 		try {
 			MqttClient client = new MqttClient(broker, clientId, persistence);
@@ -45,14 +52,15 @@ public class SubscribeTest {
 				}
 
 				public void messageArrived(String topic, MqttMessage message) throws Exception {
-					System.out.println(topic);
-					String m = new String(message.getPayload());
-					System.out.println(m);
+					System.out.printf("Got massage %s in channel %s.%n", message, topic);
+					if(message.toString().equals("foto_taken")) {
+						countPictures++; 
+						propertiesConfig.setProperty("countPictures", String.valueOf(countPictures));
+					}
 				}
 
 				public void deliveryComplete(IMqttDeliveryToken token) {
 					System.out.println("Delivery Complete");
-
 				}
 			};
 

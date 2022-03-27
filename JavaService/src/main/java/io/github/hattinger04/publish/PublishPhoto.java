@@ -1,3 +1,4 @@
+package io.github.hattinger04.publish;
 import java.io.IOException;
 
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -5,24 +6,27 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
+import io.github.hattinger04.PropertiesConfig;
 /**
  * 
  * @author Hattinger04
  *
  */
 
-public class PublishTest {
+public class PublishPhoto {
 
 	private static String username;
 	private static String password;
 	private static String broker;
 	private static String channel;
-	private final static String clientId = "JavaServicePublish";
+	private final static String clientId = "JavaServicePublishPhoto";
 
-	private static PropertiesConfig propertiesConfig = new PropertiesConfig(); 
+	private static PropertiesConfig propertiesConfig; 
 
 	
 	public static void main(String[] args) throws IOException {
+		propertiesConfig = new PropertiesConfig(); 
 		propertiesConfig.loadProperties();
 		MemoryPersistence persistence = new MemoryPersistence();
 

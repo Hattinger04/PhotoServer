@@ -28,6 +28,7 @@ Create new file in "_PhotoServer/raspberry_service_" and put in following values
 ## Starting client on RaspberryPi:
 - install all needed library's (pip install paho-mqtt, picamera, ...)
 - change hosts value if needed (school or home)
+- upload raspberry_service folder to raspberrypi (e.g. by WinSCP)
 - run script: 
     - sudo python3 client_request.py 
     - or sudo /usr/bin/python client_request.py

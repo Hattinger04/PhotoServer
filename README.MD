@@ -43,3 +43,5 @@ Info: Import JavaService Project as a Maven project!
   - set createProperties to false
 - After that, you can start the 3 applications in the java packages
 
+## Starting Server: 
+Start server.py

@@ -1,4 +1,4 @@
-# PhotoServer Installing (by Hattinger04)
+# PhotoServer guidance (by Hattinger04)
 
 ## Creating keys:
 there are two different "key" files (one in the root and the other one in the raspberry_service folder)

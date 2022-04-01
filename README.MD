@@ -1,4 +1,4 @@
-# PhotoServer
+# PhotoServer Installing (by Hattinger04)
 
 ## Creating keys:
 there are two different "key" files (one in the root and the other one in the raspberry_service folder)
@@ -23,9 +23,9 @@ Create new file in "_PhotoServer/raspberry_service_" and put in following values
 - execute mosquitto_passwd.exe -c <pw.txt> <username> 
 <br> (if you change name of pw.txt, you have to change it in mosquitto.conf too)
 - execute cmd as admin
-- "net start mosquitto" or "mosquitto.exe -v -c mosquitto.conf" (better is last)
+- "net start mosquitto" or "mosquitto.exe -v -c mosquitto.conf" (if first is not working, try second)
 
-## Starting client on RapsberryPi:
+## Starting client on RaspberryPi:
 - install all needed library's (pip install paho-mqtt, picamera, ...)
 - change hosts value if needed (school or home)
 - run script: 
@@ -33,3 +33,12 @@ Create new file in "_PhotoServer/raspberry_service_" and put in following values
     - or sudo /usr/bin/python client_request.py
 
 ## Starting client in Java:
+Info: Import JavaService Project as a Maven project!
+- First, go to PropertiesConfig
+  - Change the member variable createProperties to true
+  - At the button of the page (createDefaultProperties()), you have to put in your values
+  - run main in PropertiesConfig 
+  - a keys.txt should have been created in src/main/resources
+  - set createProperties to false
+- After that, you can start the 3 applications in the java packages
+

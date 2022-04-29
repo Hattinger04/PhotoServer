@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
@@ -13,6 +14,9 @@ from azure.cognitiveservices.vision.computervision import ComputerVisionClient
 from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
 from azure.cognitiveservices.vision.computervision.models import VisualFeatureTypes
 from msrest.authentication import CognitiveServicesCredentials
+from azure.cognitiveservices.vision.face import FaceClient
+from msrest.authentication import CognitiveServicesCredentials
+
 import time
 import base64
 
@@ -49,6 +53,7 @@ class Photo(Base):
     DESCRIPTION = Column(Text)
     ANALYSIS = Column(Text)
     RECOGNITION = Column(Text)
+    FACE = Column(Text)
 
     def serialize(self):
         return {
@@ -80,23 +85,53 @@ def decode_Base64(fName, data):
 
 class AzureServices():
     # TODO: make json better
-    def analyseImage(self, name):
+    def analyseImage(self, path):
         endpoint = "germanywestcentral"
         credentials = CognitiveServicesCredentials(ex_02_subscription_key)
         client = ComputerVisionClient(endpoint="https://" + endpoint + ".api.cognitive.microsoft.com/",
                                       credentials=credentials)
-        image_analysis = client.analyze_image_in_stream(open(name, "rb"), visual_features=[VisualFeatureTypes.tags])
+        image_analysis = client.analyze_image_in_stream(open(path, "rb"), visual_features=[VisualFeatureTypes.tags])
         info = []
         for tag in image_analysis.tags:
             info.append(str(tag))
-        analysis = client.describe_image_in_stream(open(name, "rb"), 3, "en")
+        analysis = client.describe_image_in_stream(open(path, "rb"), 3, "en")
         for caption in analysis.captions:
             info.append(caption.confidence)
         return json.dumps(info)
 
-    def recognizeImage(self, image):
-        return ""
+    # TODO: No key yet!
+    def recognizeImage(self, path):
+        endpoint = "germanywestcentral"
+        credentials = CognitiveServicesCredentials(ex_01_subscription_key)
+        client = ComputerVisionClient(endpoint="https://" + endpoint + ".api.cognitive.microsoft.com/",
+                                      credentials=credentials)
 
+        image_analysis = client.analyze_image_in_stream(open(path, "rb"), visual_features=[VisualFeatureTypes.tags])
+        info = []
+        for tag in image_analysis.tags:
+            info.append(str(tag))
+        analysis = client.describe_image_in_stream(open(path, "rb"), 3, "en")
+        for caption in analysis.captions:
+            info.append(caption.confidence)
+        return json.dumps(info)
+
+    def faceClient(self, name):
+        face_client = FaceClient(ex_04_endpoint, CognitiveServicesCredentials(ex_04_subscription_key))
+
+        fname = "./%s" % name
+        single_image_name = os.path.basename(fname)
+        detected_faces = face_client.face.detect_with_stream(open(fname, 'rb'),detection_model='detection_03')  # We use detection model 3 to get better performance.
+
+        if not detected_faces:
+            return 'No face detected from image {}'.format(single_image_name)
+
+        info = []
+        for face in detected_faces:
+            info.append(str(face.face_id))
+            info.append(str(face.face_rectangle))
+            info.append(str(face.face_attributes))
+            info.append(str(face.face_landmarks))
+        return json.dumps(info)
 
 class File(Resource):
     def get(self, id):
@@ -111,22 +146,25 @@ class File(Resource):
             return jsonify({"message": "wrong extension"})
         analysis = ""
         recognition = ""
+        face = ""
         path = "img/%s.%s" % (str(id), request.form["EXTENSION"])
         if request.form["SERVICE"] == "analysis":
             decode_Base64(path, request.form["PICTURE"])
             analysis = json.dumps(services.analyseImage(path))
         elif request.form["SERVICE"] == "recognition":
-            recognition = services.recognizeImage(request.form["PICTURE"])
+            recognition = json.dumps(services.recognizeImage(path))
+        elif request.form["SERVICE"] == "face":
+            face = json.dumps(services.faceClient(path))
         else:
             response = "no/unknown service!"
         picture = Photo(TITLE=request.form["TITLE"], DEVICE=request.form["DEVICE"],
                         UPLOADDATE=datetime.datetime.strptime(request.form["UPLOADDATE"], '%Y-%m-%d %H:%M:%S.%f'), \
                         PICTURE=request.form["PICTURE"], EXTENSION=request.form["EXTENSION"],
-                        DESCRIPTION=request.form["DESCRIPTION"], ANALYSIS=analysis, RECOGNITION=recognition)
+                        DESCRIPTION=request.form["DESCRIPTION"], ANALYSIS=analysis, RECOGNITION=recognition, FACE=face)
 
         db_session.add(picture)
         db_session.flush()
-        return jsonify({'message': 'file stored', "analysis": analysis, "recognition": recognition })
+        return jsonify({'message': 'file stored', "analysis": analysis, "recognition": recognition , "face": face})
 
     def delete(self, id):
         photo = Photo.query.get(id)

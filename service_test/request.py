@@ -26,3 +26,25 @@ response = requests.put("%s/%s" % (host, "1"), data={
     "SERVICE": "analysis"
 }).json()
 print(json.dumps(response, indent=4))
+
+response = requests.put("%s/%s" % (host, "1"), data={
+    "TITLE": "Test",
+    "DEVICE": "PC",
+    "UPLOADDATE": datetime.datetime.now(),
+    "PICTURE": encoded_string,
+    "EXTENSION": "jpg",
+    "DESCRIPTION": "test services",
+    "SERVICE": "response"
+}).json()
+print(json.dumps(response, indent=4))
+
+response = requests.put("%s/%s" % (host, "1"), data={
+    "TITLE": "Test",
+    "DEVICE": "PC",
+    "UPLOADDATE": datetime.datetime.now(),
+    "PICTURE": encoded_string,
+    "EXTENSION": "jpg",
+    "DESCRIPTION": "test services",
+    "SERVICE": "face"
+}).json()
+print(json.dumps(response, indent=4))

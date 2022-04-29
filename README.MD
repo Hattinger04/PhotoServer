@@ -8,6 +8,10 @@ Create new file in "_PhotoServer/_ " and put in following values:
   - admin_password = "your_password" [String]
   - mqtt_ip = "your_ip" [String]
   - mqtt_port = port_number [int]
+  - ex_02_subscription_key = "key_analysis" [String]
+  - ex_03_subscription_key = "key_recognition" [String]
+  - ex_04_subscription_key = "key_face" [String]
+  - ex_04_endpoint = "azure_endpoint" [String]
 - **keysRaspberry.py**:
 Create new file in "_PhotoServer/raspberry_service_" and put in following values:
   - admin_username = "your_username" [String]
@@ -45,3 +49,13 @@ Info: Import JavaService Project as a Maven project!
 
 ## Starting Server: 
 Start server.py
+
+## Using services:
+Use services from azure: 
+- create azure account
+- create services: 
+  - face-recognition
+  - OCR
+  - image analysis
+- put keys in keysServer.py file
+- create put REST-request like in the service_test/request.py (put own images in img folder) 

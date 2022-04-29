@@ -1,3 +1,5 @@
+import json
+
 import requests
 import datetime
 import base64
@@ -23,4 +25,4 @@ response = requests.put("%s/%s" % (host, "1"), data={
     "DESCRIPTION": "test services",
     "SERVICE": "analysis"
 }).json()
-print(response)
+print(json.dumps(response, indent=4))

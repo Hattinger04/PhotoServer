@@ -79,6 +79,7 @@ def decode_Base64(fName, data):
 
 
 class AzureServices():
+    # TODO: make json better
     def analyseImage(self, name):
         endpoint = "germanywestcentral"
         credentials = CognitiveServicesCredentials(ex_02_subscription_key)

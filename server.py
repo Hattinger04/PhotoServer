@@ -1,4 +1,6 @@
 import datetime
+import json
+
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 from sqlalchemy.sql.expression import func
@@ -7,7 +9,16 @@ from sqlalchemy import Column, Integer, Text, DateTime, create_engine, LargeBina
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
+from azure.cognitiveservices.vision.computervision import ComputerVisionClient
+from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
+from azure.cognitiveservices.vision.computervision.models import VisualFeatureTypes
+from msrest.authentication import CognitiveServicesCredentials
+import time
+import base64
+
 # UPLOAD_FOLDER = r'PATH\PhotoServer\static'
+import keysServer
+
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 
 app = Flask(__name__)
@@ -20,6 +31,11 @@ engine = create_engine(
 db_session = scoped_session(sessionmaker(autocommit=True, autoflush=True, bind=engine))
 Base.query = db_session.query_property()
 
+ex_01_subscription_key = keysServer.ex_01_subscription_key
+ex_02_subscription_key = keysServer.ex_02_subscription_key
+ex_04_subscription_key = keysServer.ex_04_subscription_key
+ex_04_endpoint = keysServer.ex_04_endpoint
+
 
 class Photo(Base):
     __tablename__ = 'Photos'
@@ -31,6 +47,8 @@ class Photo(Base):
     PICTURE = Column(Text, nullable=False)
     EXTENSION = Column(Text, nullable=False)
     DESCRIPTION = Column(Text)
+    ANALYSIS = Column(Text)
+    RECOGNITION = Column(Text)
 
     def serialize(self):
         return {
@@ -53,6 +71,32 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def decode_Base64(fName, data):
+    data_base64 = data.encode('utf-8')
+    with open(fName, 'wb') as file:
+        decoded_data = base64.decodebytes(data_base64)
+        file.write(decoded_data)
+
+
+class AzureServices():
+    def analyseImage(self, name):
+        endpoint = "germanywestcentral"
+        credentials = CognitiveServicesCredentials(ex_02_subscription_key)
+        client = ComputerVisionClient(endpoint="https://" + endpoint + ".api.cognitive.microsoft.com/",
+                                      credentials=credentials)
+        image_analysis = client.analyze_image_in_stream(open(name, "rb"), visual_features=[VisualFeatureTypes.tags])
+        info = []
+        for tag in image_analysis.tags:
+            info.append(str(tag))
+        analysis = client.describe_image_in_stream(open(name, "rb"), 3, "en")
+        for caption in analysis.captions:
+            info.append(caption.confidence)
+        return json.dumps(info)
+
+    def recognizeImage(self, image):
+        return ""
+
+
 class File(Resource):
     def get(self, id):
         photo = Photo.query.get(id)
@@ -61,19 +105,27 @@ class File(Resource):
         return photo.serialize()
 
     def put(self, id):
+        services = AzureServices()
         if request.form["EXTENSION"] not in ALLOWED_EXTENSIONS:
             return jsonify({"message": "wrong extension"})
-        # creating file and store in static
-        # with open(os.path.join(UPLOAD_FOLDER, filename), "wb") as fp:
-        #    fp.write(request.data)
-
+        analysis = ""
+        recognition = ""
+        path = "img/%s.%s" % (str(id), request.form["EXTENSION"])
+        if request.form["SERVICE"] == "analysis":
+            decode_Base64(path, request.form["PICTURE"])
+            analysis = json.dumps(services.analyseImage(path))
+        elif request.form["SERVICE"] == "recognition":
+            recognition = services.recognizeImage(request.form["PICTURE"])
+        else:
+            response = "no/unknown service!"
         picture = Photo(TITLE=request.form["TITLE"], DEVICE=request.form["DEVICE"],
                         UPLOADDATE=datetime.datetime.strptime(request.form["UPLOADDATE"], '%Y-%m-%d %H:%M:%S.%f'), \
                         PICTURE=request.form["PICTURE"], EXTENSION=request.form["EXTENSION"],
-                        DESCRIPTION=request.form["DESCRIPTION"])
+                        DESCRIPTION=request.form["DESCRIPTION"], ANALYSIS=analysis, RECOGNITION=recognition)
+
         db_session.add(picture)
         db_session.flush()
-        return jsonify({'message': 'file stored'})
+        return jsonify({'message': 'file stored', "analysis": analysis, "recognition": recognition })
 
     def delete(self, id):
         photo = Photo.query.get(id)

@@ -6,3 +6,5 @@ __pycache__
 venv
 JavaService/src/main/resources/keys.txt
 JavaService/target/classes/keys.txt
+service_test/img/*
+img/*
